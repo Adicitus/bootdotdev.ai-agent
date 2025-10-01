@@ -15,14 +15,35 @@ def test_get_file_content(working_dir, path):
 
 def main(working_dir, path):
     if workdir == None:
-        test_get_files_info("calculator", ".")
-        test_get_files_info("calculator", "pkg")
-        test_get_files_info("calculator", "/bin")
-        test_get_files_info("calculator", "../")
-        test_get_file_content("calculator", "main.py")
-        test_get_file_content("calculator", "pkg/calculator.py")
-        test_get_file_content("calculator", "/bin/cat")
-        test_get_file_content("calculator", "pkg/does_not_exist.py")
+        tests = [
+            {
+                "function": test_get_files_info,
+                "cases": [
+                    ("calculator", "."),
+                    ("calculator", "pkg"),
+                    ("calculator", "/bin"),
+                    ("calculator", "../")
+                ]
+            },
+            {
+                "function": test_get_file_content,
+                "cases": [
+                    ("calculator", "main.py"),
+                    ("calculator", "pkg/calculator.py"),
+                    ("calculator", "/bin/cat"),
+                    ("calculator", "pkg/does_not_exist.py"),
+                ]
+            }
+        ]
+
+        for test in tests:
+            f = test["function"]
+            for case in test["cases"]:
+                print("[START: test case] " + "-" * 60)
+                print(f"Testing {f} with the following arguments: {case}")
+                f(*case)
+                print("[END:   test case] " + "-" * 60)
+
         exit(0)
     test_get_files_info(working_dir, path)
 
