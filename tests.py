@@ -2,6 +2,7 @@ import sys
 from functions.get_files_info import get_files_info
 from functions.get_file_content import get_file_content
 from functions.write_file import write_file
+from functions.run_python_file import run_python_file
 
 def test_get_files_info(working_dir, path):
     if path == ".":
@@ -42,6 +43,17 @@ def main(working_dir, path):
                     ("calculator", "pkg/morelorem.txt", "lorem ipsum dolor sit amet"),
                     ("calculator", "/tmp/temp.txt", "this should not be allowed")
                 ]
+            },
+            {
+                "function": lambda wd, p, a=[]: print(run_python_file(wd, p, a)),
+                "cases": [
+                    ("calculator", "main.py"),
+                    ("calculator", "main.py", ["3 + 5"]),
+                    ("calculator", "tests.py"),
+                    ("calculator", "../main.py"),
+                    ("calculator", "nonexistent.py")
+                ]
+
             }
         ]
 
