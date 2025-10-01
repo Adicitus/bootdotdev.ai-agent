@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+from call_function import call_function
+
 system_prompt = """
 You are a helpful AI coding agent.
 
@@ -128,7 +130,12 @@ def main(prompt, debug=False, verbose=False):
         print(res.text)
     if res.function_calls:
         for call in res.function_calls:
-            print(f"Calling function: {call.name}({call.args})")
+            # print(f"Calling function: {call.name}({call.args})")
+            function_call_result = call_function(call, verbose)
+            if not function_call_result.parts[0].function_response.response:
+                raise Exception("Internal system error: call_function returned type.Content without a response.")
+
+            print(f"-> {function_call_result.parts[0].function_response.response}")
 
     if verbose: print(f"Prompt tokens: {res.usage_metadata.prompt_token_count}")
     if verbose: print(f"Response tokens: {res.usage_metadata.candidates_token_count}")
