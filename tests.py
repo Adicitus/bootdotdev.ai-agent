@@ -1,6 +1,7 @@
 import sys
 from functions.get_files_info import get_files_info
 from functions.get_file_content import get_file_content
+from functions.write_file import write_file
 
 def test_get_files_info(working_dir, path):
     if path == ".":
@@ -32,6 +33,14 @@ def main(working_dir, path):
                     ("calculator", "pkg/calculator.py"),
                     ("calculator", "/bin/cat"),
                     ("calculator", "pkg/does_not_exist.py"),
+                ]
+            },
+            {
+                "function": lambda wd, p, c: print(write_file(wd, p, c)),
+                "cases": [
+                    ("calculator", "lorem.txt", "wait, this isn't lorem ipsum"),
+                    ("calculator", "pkg/morelorem.txt", "lorem ipsum dolor sit amet"),
+                    ("calculator", "/tmp/temp.txt", "this should not be allowed")
                 ]
             }
         ]
