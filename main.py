@@ -1,3 +1,5 @@
+import config as agent_config
+
 import os
 import sys
 from dotenv import load_dotenv
@@ -121,24 +123,54 @@ def main(prompt, debug=False, verbose=False):
     if debug:
         print("skipping call because of debug flag")
         return
-    res = client.models.generate_content(
-            model="gemini-2.0-flash-001",
-            contents=messages,
-            config=config
-    )
-    if res.text:
-        print(res.text)
-    if res.function_calls:
-        for call in res.function_calls:
-            # print(f"Calling function: {call.name}({call.args})")
-            function_call_result = call_function(call, verbose)
-            if not function_call_result.parts[0].function_response.response:
-                raise Exception("Internal system error: call_function returned type.Content without a response.")
+    
+    # Maximum number of loops to allow.
+    loop_limit = agent_config.loop_limit
 
-            print(f"-> {function_call_result.parts[0].function_response.response}")
+    if verbose: print(f"Loop limit (loop_limit) set to {loop_limit}")
 
-    if verbose: print(f"Prompt tokens: {res.usage_metadata.prompt_token_count}")
-    if verbose: print(f"Response tokens: {res.usage_metadata.candidates_token_count}")
+    # Flag to determine if we're expected to send data to the LLM and thus need to iterate to handle the results.
+    loop = True and loop_limit > 0
+    if loop and verbose: print(f"Starting agent feedback loop (max_loop = {loop_limit})")
+    # Main feedback loop for the Agent.
+    while loop:
+        loop = False # Assume that this is the last call in the loop.
+        if verbose: print(f"[START loop] {'-'*80}")
+        res = client.models.generate_content(
+                model="gemini-2.0-flash-001",
+                contents=messages,
+                config=config
+        )
+
+        if verbose: print(f"Prompt tokens: {res.usage_metadata.prompt_token_count}")
+        if verbose: print(f"Response tokens: {res.usage_metadata.candidates_token_count}")
+
+        for candidate in res.candidates:
+            messages.append(candidate.content)
+
+        if res.text:
+            print(res.text)
+        if res.function_calls:
+            for call in res.function_calls:
+                # print(f"Calling function: {call.name}({call.args})")
+                function_call_result = call_function(call, verbose)
+                if not function_call_result.parts[0].function_response.response:
+                    raise Exception("Internal system error: call_function returned type.Content without a response.")
+
+                print(f"-> {function_call_result.parts[0].function_response.response}")
+
+                messages.append(function_call_result)
+            
+            # Since we've got results to return the LLM, we need to perform another loop.
+            loop = True
+        
+        loop_limit -= 1
+        loop = loop and loop_limit > 0
+        if verbose: print(f"[  END loop] {'-'*80}")
+        if loop and verbose: print(f"Looping: loop_limit={loop_limit}")
+
+
+        
 
 
 
